@@ -10,8 +10,8 @@ from selenium.webdriver.support import expected_conditions as EC
 current_date = datetime.now().date()
 days_until_next_monday = (7 - current_date.weekday()) % 7
 next_monday_date = current_date + timedelta(days=days_until_next_monday)
-next_week_date = current_date + timedelta(days=7)
-url = f"https://www.eventbrite.es/d/spain--barcelona/free--events/?page=1&start_date={next_monday_date}&end_date={next_week_date}"
+next_week_date = current_date + timedelta(weeks=1)
+url = f"https://www.eventbrite.es/d/spain--barcelona/free--events/?page=1&start_date={current_date}&end_date={next_week_date}" if days_until_next_monday < 2 else f"https://www.eventbrite.es/d/spain--barcelona/free--events/?page=1&start_date={current_date}&end_date={next_monday_date}"
 print(url)
 """
 options = webdriver.ChromeOptions()
@@ -20,7 +20,6 @@ driver = webdriver.Chrome(options=options)
 
 driver.get(url)
 """
-
 html_text = requests.get(url, timeout=(20, 60)).text
 soup = BeautifulSoup(html_text,'lxml')
 
@@ -39,5 +38,5 @@ for card in titleHorizontal:
     else:
         date = paragraphsArray[0].text
     line = f"{title} {date} {link}.\n"
-    #f.write(line)
+    f.write(line)
 f.close()
