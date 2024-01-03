@@ -3,6 +3,9 @@ from selenium.webdriver.common.by import By
 import requests
 from datetime import datetime, timedelta
 from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 def getUrl(page):
     current_date = datetime.now().date()
@@ -12,24 +15,29 @@ def getUrl(page):
     url = f"https://www.eventbrite.es/d/spain--barcelona/free--events/?page={page}&start_date={current_date}&end_date={next_week_date}" if days_until_next_monday < 2 else f"https://www.eventbrite.es/d/spain--barcelona/free--events/?page={page}&start_date={current_date}&end_date={next_monday_date}"
     return url
 
-
-def setPagination(url):
+def getDriver(url):
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     driver = webdriver.Chrome(options=options)
     driver.get(url)
+    return driver
+
+
+def setPagination(url):
+    driver = getDriver(url)
     pagination_element = driver.find_element(By.CLASS_NAME, "eds-pagination__navigation-minimal").text
     global page
     page = int(' '.join(pagination_element.split(' ')[2:]))
 
 
 def getInfoSections(url):
+    driver = getDriver(url)
     html_text = requests.get(url, timeout=(20, 60)).text
     soup = BeautifulSoup(html_text, 'lxml')
     titleHorizontal = soup.find_all('section', class_='discover-horizontal-event-card')
     return titleHorizontal
 
-   
+
 def writeOutputFile(mode, titleHorizontal):
     with open("output.txt", mode) as f:
         for card in titleHorizontal:
@@ -45,11 +53,10 @@ def writeOutputFile(mode, titleHorizontal):
             f.write(line)
 
 if __name__ == "__main__":
-    
     page = 1
     url = getUrl(page)
+    print(url)
     setPagination(url)
-
     for i in range(page):
         iteration = i+1
         url = getUrl(iteration)
